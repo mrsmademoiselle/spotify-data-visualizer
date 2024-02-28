@@ -9,8 +9,31 @@
 - clsx for dynamic class conditions
 - dotenv for environment variables
 
+## Push to another branch
 
-## Setup
+Clone repository:
+
+```bash
+git clone <url_to_this_repository> your_project_directory
+cd your_project_directory
+```
+
+Replace remotes:
+
+```bash
+git remote -v
+
+git remote remove <remote_name> # typically origin
+git remote add <your_new_repository_url>
+```
+
+Publish branch:
+
+```bash
+git push -u origin
+```
+
+## Local setup
 
 Install dependencies
 
@@ -24,7 +47,7 @@ Copy environment variables
 cp .env.example .env
 ```
 
-Run application 
+Run application
 
 ```bash
 npm run dev

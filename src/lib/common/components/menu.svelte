@@ -5,7 +5,7 @@
 	}
 	const menuItems: MenuItem[] = [
 		{ href: '/', label: 'Home' },
-		{ href: '/path', label: 'Some path' }
+		{ href: '/genres', label: 'Top songs genres' }
 	];
 </script>
 

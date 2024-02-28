@@ -6,10 +6,10 @@ const config: UserConfig = {
 	plugins: [sveltekit()],
 	build: {},
 	server: {
-		port: 3000,
+		port: 3000
 	},
 	preview: {
-		port: 3000,
-	},
+		port: 3000
+	}
 };
 export default config;
