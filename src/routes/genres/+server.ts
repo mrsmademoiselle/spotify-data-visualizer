@@ -1,10 +1,9 @@
 import { SpotifyApi } from '$lib/common/apis/spotify/spotify-api';
-import type { TopGenre, Locale } from '$lib/common/types/types';
+import type { Locale } from '$lib/common/types/types';
 import { locales } from '$lib/common/utils/locales';
 import { json } from '@sveltejs/kit';
 
 export const GET = async () => {
-	const topGenres: TopGenre[] = [];
 	const genresForMarket = new Map<Locale, Map<string, number>>();
 
 	try {
@@ -32,5 +31,5 @@ export const GET = async () => {
 		console.error('Could not fetch playlist:', error);
 	}
 
-	return json({ topGenres: topGenres, genresForMarket: genresForMarket });
+	return json(genresForMarket);
 };

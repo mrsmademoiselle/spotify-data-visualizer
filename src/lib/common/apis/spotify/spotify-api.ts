@@ -9,7 +9,7 @@ import {
 	type SpotifyPlaylistResponse,
 	type SpotifyMultipleArtistResponse,
 	type PlaylistTracks
-} from './types/spotify-search-response';
+} from './types/spotify-data-responses';
 
 export class SpotifyApi extends Api {
 	private SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
@@ -32,6 +32,7 @@ export class SpotifyApi extends Api {
 	}
 
 	async getTop50PlaylistGenresForCountry(locale: Locale): Promise<string[]> {
+		const genres: string[] = [];
 		try {
 			const playlistId = await this.findTop50PlaylistId(locale);
 
@@ -42,7 +43,7 @@ export class SpotifyApi extends Api {
 
 			const playlist: SpotifyPlaylistResponse = await this.getPlaylist(playlistId, locale);
 			const artistIds: string[] = this.extractArtistIds(playlist.tracks.items);
-			const genres: string[] = await this.fetchGenresForArtists(artistIds, locale);
+			genres.push(...(await this.fetchGenresForArtists(artistIds, locale)));
 
 			return genres;
 		} catch (error) {
@@ -87,6 +88,7 @@ export class SpotifyApi extends Api {
 	}
 
 	private async findTop50PlaylistId(locale: Locale): Promise<string | undefined> {
+		console.log(locale);
 		const response: SpotifyPlaylistSearchResponse = await this.searchFor(
 			SpotifySearchType.PLAYLIST,
 			'Top 50',
@@ -100,20 +102,27 @@ export class SpotifyApi extends Api {
 				playlist.name.includes(locale.fullCountryName) &&
 				playlist.owner.display_name === 'Spotify'
 			) {
+				console.log(playlist.id);
 				return playlist.id;
 			}
 		}
-
+		console.log('nada');
 		return undefined;
 	}
 
 	private async fetchGenresForArtists(artistIds: string[], locale: Locale): Promise<string[]> {
+		const genres: string[] = [];
+		const maxIdsPerRequest = 100;
 		try {
-			const response: SpotifyMultipleArtistResponse = await this.getAllArtist(artistIds, locale);
-			return response.artists.flatMap((artist) => artist.genres);
+			for (let i = 0; i < artistIds.length; i += maxIdsPerRequest) {
+				const chunk = artistIds.slice(i, i + maxIdsPerRequest);
+				const response: SpotifyMultipleArtistResponse = await this.getAllArtist(chunk, locale);
+				genres.push(...response.artists.flatMap((artist) => artist.genres));
+			}
+			return genres;
 		} catch (error) {
 			console.error('Error fetching artist data:', error);
-			return [];
+			return genres;
 		}
 	}
 
