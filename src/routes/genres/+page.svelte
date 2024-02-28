@@ -1,14 +1,19 @@
 <script lang="ts">
-	import type { SpotifyPlaylistResponse } from '$lib/common/apis/spotify/types/spotify-search-response';
 	import Top50GenresPerCountry from '$lib/common/components/top-50-genres-per-country.svelte';
-	import type { Locale } from '$lib/common/types/types';
-	import type { PageData } from '../$types';
+	import type { Locale, TopGenre } from '$lib/common/types/types';
+	import { onMount } from 'svelte';
 
-	export let data: PageData;
+	let genresForMarket: Map<Locale, Map<string, number>> | undefined;
 
-	const genresForMarket: Map<Locale, Map<string, number>> = data.genresForMarket;
+	onMount(async () => {
+		const response = await fetch('/genres');
+		const data = await response.json();
+		genresForMarket = data.genresForMarket;
+	});
 </script>
 
-{#each genresForMarket.entries() as entry}
-	<Top50GenresPerCountry locale={entry[0]} genresForMarket={entry[1]} />
-{/each}
+{#if genresForMarket}
+	{#each genresForMarket.entries() as entry}
+		<Top50GenresPerCountry locale={entry[0]} genresForMarket={entry[1]} />
+	{/each}
+{/if}

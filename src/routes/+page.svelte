@@ -1,4 +1,4 @@
 <script lang="ts">
 </script>
 
-<div>Homepage</div>
+<div>Nothing to see here!</div>
