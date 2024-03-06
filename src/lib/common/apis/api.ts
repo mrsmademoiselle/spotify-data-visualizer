@@ -18,6 +18,7 @@ export class Api {
 				console.info('Successfully fetched data');
 				return response.json();
 			} else {
+				console.error(await response.json());
 				throw new Error(`Failed to fetch data. Status: ${response.status}`);
 			}
 		} catch (error) {

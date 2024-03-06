@@ -32,18 +32,20 @@ export class SpotifyApi extends Api {
 	}
 
 	async getTop50PlaylistGenresForCountry(locale: Locale): Promise<string[]> {
+		console.log('---------------------------');
+		console.log('LOCALE', locale.fullCountryName);
 		const genres: string[] = [];
 		try {
 			const playlistId = await this.findTop50PlaylistId(locale);
 
 			if (!playlistId) {
-				console.error(`Could not find top50 playlist for locale ${locale?.country}`);
+				console.error(`Could not find top 50 playlist for locale ${locale?.country}`);
 				return [];
 			}
 
 			const playlist: SpotifyPlaylistResponse = await this.getPlaylist(playlistId, locale);
 			const artistIds: string[] = this.extractArtistIds(playlist.tracks.items);
-			genres.push(...(await this.fetchGenresForArtists(artistIds, locale)));
+			genres.push(...(await this.fetchGenresForArtists(artistIds)));
 
 			return genres;
 		} catch (error) {
@@ -52,11 +54,12 @@ export class SpotifyApi extends Api {
 		}
 	}
 
-	async getAllArtist(artistIds: string[], locale: Locale): Promise<SpotifyMultipleArtistResponse> {
+	async getAllArtist(artistIds: string[]): Promise<SpotifyMultipleArtistResponse> {
 		const url = new URL(`${this.SPOTIFY_BASE_URL}/artists`);
 		url.searchParams.append('ids', artistIds.join(','));
 
-		return this.get<SpotifyMultipleArtistResponse>(url, locale);
+		console.log(url.toString());
+		return this.get<SpotifyMultipleArtistResponse>(url);
 	}
 
 	async searchFor(
@@ -88,7 +91,6 @@ export class SpotifyApi extends Api {
 	}
 
 	private async findTop50PlaylistId(locale: Locale): Promise<string | undefined> {
-		console.log(locale);
 		const response: SpotifyPlaylistSearchResponse = await this.searchFor(
 			SpotifySearchType.PLAYLIST,
 			'Top 50',
@@ -102,7 +104,6 @@ export class SpotifyApi extends Api {
 				playlist.name.includes(locale.fullCountryName) &&
 				playlist.owner.display_name === 'Spotify'
 			) {
-				console.log(playlist.id);
 				return playlist.id;
 			}
 		}
@@ -110,14 +111,23 @@ export class SpotifyApi extends Api {
 		return undefined;
 	}
 
-	private async fetchGenresForArtists(artistIds: string[], locale: Locale): Promise<string[]> {
+	private async fetchGenresForArtists(artistIds: string[]): Promise<string[]> {
 		const genres: string[] = [];
-		const maxIdsPerRequest = 100;
+		const maxIdsPerRequest = 50;
+
 		try {
 			for (let i = 0; i < artistIds.length; i += maxIdsPerRequest) {
-				const chunk = artistIds.slice(i, i + maxIdsPerRequest);
-				const response: SpotifyMultipleArtistResponse = await this.getAllArtist(chunk, locale);
-				genres.push(...response.artists.flatMap((artist) => artist.genres));
+				const end =
+					i + maxIdsPerRequest <= artistIds.length ? i + maxIdsPerRequest : artistIds.length;
+
+				console.log(`from ${i} to ${end}`);
+
+				const chunk = artistIds.slice(i, end);
+
+				const response: SpotifyMultipleArtistResponse = await this.getAllArtist(chunk);
+
+				const responseGenres = response.artists.flatMap((artist) => artist.genres);
+				genres.push(...responseGenres);
 			}
 			return genres;
 		} catch (error) {
@@ -173,6 +183,14 @@ export class SpotifyApi extends Api {
 	}
 
 	private extractArtistIds(items: PlaylistTracks[]): string[] {
-		return items.flatMap((item) => item.track.artists.map((artist) => artist.id));
+		const artistIdsSet = new Set<string>(); // set to prevent duplicates
+
+		items.forEach((item) => {
+			item.track.artists.forEach((artist) => {
+				artistIdsSet.add(artist.id);
+			});
+		});
+
+		return Array.from(artistIdsSet);
 	}
 }

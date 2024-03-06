@@ -9,7 +9,7 @@
 	];
 </script>
 
-<nav class="bg-gray-800 p-4">
+<nav class="bg-sky-950 p-4">
 	<div class="mx-8 flex justify-between">
 		<a href="/" class="text-white text-lg font-semibold">Skeleton</a>
 

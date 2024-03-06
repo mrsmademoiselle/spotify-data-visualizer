@@ -1,59 +1,105 @@
 <script lang="ts">
+	import Button from '$lib/common/components/button.svelte';
 	import Table from '$lib/common/components/table.svelte';
-	import type { Locale } from '$lib/common/types/types';
-	import { onMount } from 'svelte';
+	import { ButtonType, type SpotifyGenresForMarket } from '$lib/common/types/types';
 
-	let tableData: string[][];
+	let genresForMarket: SpotifyGenresForMarket[] = [];
+	let isLoading: boolean = false;
 
-	let genresForMarket: undefined | Map<Locale, Map<string, number>> = undefined;
-	onMount(async () => {
+	async function fetchData() {
+		isLoading = true;
+
 		const response = await fetch('/genres');
-		const data: Map<Locale, Map<string, number>> = await response.json();
+		const data: SpotifyGenresForMarket[] = await response.json();
 
 		genresForMarket = data;
 
-		if (genresForMarket) {
-			genresForMarket.forEach((genreMap) => {
-				genreMap.forEach((amount, genre) => {
-					tableData.push([genre, amount.toString()]);
-				});
-			});
-		}
-	});
+		isLoading = false;
+	}
+
+	function getTableData(genreMarketMap: SpotifyGenresForMarket): string[][] {
+		const tableData: string[][] = [];
+
+		genreMarketMap.genres.forEach((genreAmount) => {
+			tableData.push([genreAmount.genre, genreAmount.count.toString()]);
+		});
+
+		return tableData;
+	}
+
+	function downloadCSV() {
+		const csvContent = genresForMarket
+			.map((genreForMarket) => {
+				const tableHeader = 'Genre,Amount of songs in top 50,Locale\n';
+
+				const tableRows = genreForMarket.genres
+					.map(
+						(genreAmount) =>
+							`${genreAmount.genre},${genreAmount.count},${genreForMarket.locale.fullCountryName}\n`
+					)
+					.join('');
+
+				return tableHeader + tableRows;
+			})
+			.join('');
+
+		const fileName = 'allGenresForMarket.csv';
+
+		const blob = new Blob([csvContent], { type: 'text/csv' });
+		const url = URL.createObjectURL(blob);
+
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = fileName;
+		document.body.appendChild(link);
+
+		link.click();
+
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}
+
+	function uploadData(event: Event) {}
 </script>
 
-{#if genresForMarket}
-	{#each genresForMarket.entries() as genresForMarketEntry}
-		<h3 class="mt-8 mb-4">{genresForMarketEntry[0].fullCountryName}</h3>
+<div class="block m-12 h-[50px]">
+	<div class="flex space-x-2">
+		<Button on:click={fetchData} label="Fetch data" buttonType={ButtonType.OUTLINE} />
 
-		<Table headers={['Genre', 'Amount of songs in top 50']} rows={tableData} />
-		<div
-			class="relative flex flex-col w-[500px] text-gray-700 bg-white shadow-md rounded-xl bg-clip-border"
-		>
-			<table class="w-full text-left table-auto min-w-max">
-				<tbody>
-					{#each genresForMarketEntry[1].entries() as entry}
-						<tr>
-							<td class="p-4">
-								<p
-									class="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900"
-								>
-									{entry[0]}
-								</p>
-							</td>
-							<td class="p-4">
-								<p
-									class="block font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900"
-								>
-									{entry[1]}
-								</p>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
+		<input type="file" accept=".csv" class="hidden" id="fileInput" on:change={uploadData} />
+		<Button label="Upload data" buttonType={ButtonType.OUTLINE} />
+
+		{#if true || genresForMarket.length > 0}
+			<Button
+				on:click={downloadCSV}
+				label="Download all data as CSV"
+				buttonType={ButtonType.PRIMARY}
+			/>
+		{/if}
+	</div>
+
+	{#if isLoading}
+		<div class="bg-white rounded-lg mt-8 animate-pulse">
+			<div class="w-2/3 h-8 bg-gray-300 rounded mb-8"></div>
+
+			<div class="w-1/3 h-8 bg-gray-300 rounded mb-2"></div>
+			<div class="w-1/3 h-8 bg-gray-300 rounded mb-2"></div>
+			<div class="w-1/3 h-8 bg-gray-300 rounded mb-2"></div>
+			<div class="w-1/3 h-8 bg-gray-300 rounded mb-2"></div>
+			<div class="w-1/3 h-8 bg-gray-300 rounded mb-2"></div>
+			<div class="w-1/3 h-8 bg-gray-300 rounded mb-2"></div>
 		</div>
-	{/each}
-{:else}
-	Nothing
-{/if}
+	{:else}
+		{#if genresForMarket.length === 0}
+			<div class="mt-8">No data. Please fetch or upload some.</div>
+		{/if}
+		{#each genresForMarket as genreForMarket}
+			{@const tableData = getTableData(genreForMarket)}
+
+			<h1 class="mt-8 mb-4 pb-4 border-b-2 border-black text-xl font-bold">
+				{genreForMarket.locale.fullCountryName}
+			</h1>
+			<Table headers={['Genre', 'Amount of songs in top 50']} rows={tableData} />
+		{/each}
+	{/if}
+</div>
