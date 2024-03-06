@@ -3,13 +3,13 @@
 	import Table from '$lib/common/components/table.svelte';
 	import { ButtonType, type SpotifyGenresForMarket } from '$lib/common/types/types';
 	import { onMount } from 'svelte';
-	import { AUTO_FETCH_DATA } from '$env/static/private';
+	import { PUBLIC_AUTO_FETCH_DATA } from '$env/static/public';
 
 	let genresForMarket: SpotifyGenresForMarket[] = [];
 	let isLoading: boolean = false;
 
 	onMount(() => {
-		if (AUTO_FETCH_DATA === 'true') {
+		if (PUBLIC_AUTO_FETCH_DATA === 'true') {
 			fetchData();
 		}
 	});

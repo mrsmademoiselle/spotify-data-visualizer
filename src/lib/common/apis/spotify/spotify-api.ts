@@ -8,7 +8,8 @@ import {
 	type SpotifyPlaylistSearchResponse,
 	type SpotifyPlaylistResponse,
 	type SpotifyMultipleArtistResponse,
-	type PlaylistTracks
+	type PlaylistTracks,
+	type MarketResponse
 } from './types/spotify-data-responses';
 
 export class SpotifyApi extends Api {
@@ -31,9 +32,14 @@ export class SpotifyApi extends Api {
 		return SpotifyApi.spotifyApiInstance;
 	}
 
+	async getAvailableMarkets(): Promise<string[]> {
+		const url = new URL(`${this.SPOTIFY_BASE_URL}/markets`);
+
+		const market: MarketResponse = await this.get<MarketResponse>(url);
+		return market.markets;
+	}
+
 	async getTop50PlaylistGenresForCountry(locale: Locale): Promise<string[]> {
-		console.log('---------------------------');
-		console.log('LOCALE', locale.fullCountryName);
 		const genres: string[] = [];
 		try {
 			const playlistId = await this.findTop50PlaylistId(locale);
@@ -107,7 +113,6 @@ export class SpotifyApi extends Api {
 				return playlist.id;
 			}
 		}
-		console.log('nada');
 		return undefined;
 	}
 

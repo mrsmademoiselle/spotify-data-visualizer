@@ -43,3 +43,7 @@ export interface SpotifyArtistResponse {
 export interface SpotifyMultipleArtistResponse {
 	artists: SpotifyArtistResponse[];
 }
+
+export interface MarketResponse {
+	markets: string[];
+}

@@ -1,14 +1,16 @@
 import { SpotifyApi } from '$lib/common/apis/spotify/spotify-api';
-import type { GenreCount, SpotifyGenresForMarket } from '$lib/common/types/types';
+import type { GenreCount, Locale, SpotifyGenresForMarket } from '$lib/common/types/types';
 import { fullLocales } from '$lib/common/utils/locales';
 import { json } from '@sveltejs/kit';
 
 export const GET = async () => {
 	let genresForMarket: SpotifyGenresForMarket[] = [];
+
 	// 180 requests per minute spotify rate limit
 
 	try {
 		const spotifyApi = SpotifyApi.getInstance();
+		const markets = await spotifyApi.getAvailableMarkets();
 
 		const countGenreDuplicates = (genres: string[]): GenreCount[] => {
 			const genreCounts: GenreCount[] = [];
@@ -25,12 +27,18 @@ export const GET = async () => {
 			return genreCounts;
 		};
 
-		for (const spotifyMarket of fullLocales) {
-			const genres: string[] = await spotifyApi.getTop50PlaylistGenresForCountry(spotifyMarket);
+		for (const country of markets) {
+			const spotifyMarket: Locale | undefined = fullLocales.find(
+				(locale) => locale.country === country
+			);
 
-			if (genres.length) {
-				const genreCounts: GenreCount[] = countGenreDuplicates(genres);
-				genresForMarket.push({ locale: spotifyMarket, genres: genreCounts });
+			if (spotifyMarket) {
+				const genres: string[] = await spotifyApi.getTop50PlaylistGenresForCountry(spotifyMarket);
+
+				if (genres.length) {
+					const genreCounts: GenreCount[] = countGenreDuplicates(genres);
+					genresForMarket.push({ locale: spotifyMarket, genres: genreCounts });
+				}
 			}
 		}
 
