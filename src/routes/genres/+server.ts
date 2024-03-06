@@ -5,7 +5,7 @@ import { json } from '@sveltejs/kit';
 
 export const GET = async () => {
 	let genresForMarket: SpotifyGenresForMarket[] = [];
-	// 180 requests per minute
+	// 180 requests per minute spotify rate limit
 
 	try {
 		const spotifyApi = SpotifyApi.getInstance();

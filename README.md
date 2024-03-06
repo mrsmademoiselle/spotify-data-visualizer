@@ -16,6 +16,15 @@ Copy environment variables
 cp .env.example .env
 ```
 
+Fill in the environment variables.
+
+| ENV VAR               |    Value    |                                                                                         Description |
+| --------------------- | :---------: | --------------------------------------------------------------------------------------------------: |
+| SPOTIFY_CLIENT_ID     |     ??      |                       https://developer.spotify.com/documentation/web-api/tutorials/getting-started |
+| SPOTIFY_CLIENT_SECRET |     ??      |                       https://developer.spotify.com/documentation/web-api/tutorials/getting-started |
+| AUTO_FETCH_DATA       | true, false | Whether to trigger data fetching on page load as opposed to manual button click. Defaults to false. |
+|                       |
+
 Run application
 
 ```bash

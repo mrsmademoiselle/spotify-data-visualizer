@@ -2,9 +2,17 @@
 	import Button from '$lib/common/components/button.svelte';
 	import Table from '$lib/common/components/table.svelte';
 	import { ButtonType, type SpotifyGenresForMarket } from '$lib/common/types/types';
+	import { onMount } from 'svelte';
+	import { AUTO_FETCH_DATA } from '$env/static/private';
 
 	let genresForMarket: SpotifyGenresForMarket[] = [];
 	let isLoading: boolean = false;
+
+	onMount(() => {
+		if (AUTO_FETCH_DATA === 'true') {
+			fetchData();
+		}
+	});
 
 	async function fetchData() {
 		isLoading = true;
