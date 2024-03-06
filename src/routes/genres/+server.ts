@@ -1,6 +1,6 @@
 import { SpotifyApi } from '$lib/common/apis/spotify/spotify-api';
 import type { GenreCount, Locale, SpotifyGenresForMarket } from '$lib/common/types/types';
-import { fullLocales } from '$lib/common/utils/locales';
+import { allLocales } from '$lib/common/utils/locales';
 import { json } from '@sveltejs/kit';
 
 export const GET = async () => {
@@ -28,7 +28,7 @@ export const GET = async () => {
 		};
 
 		for (const country of markets) {
-			const spotifyMarket: Locale | undefined = fullLocales.find(
+			const spotifyMarket: Locale | undefined = allLocales.find(
 				(locale) => locale.country === country
 			);
 

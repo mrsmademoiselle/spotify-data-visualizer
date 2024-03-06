@@ -3,7 +3,7 @@ import type { Locale } from '../types/types';
 /**
  * A small amount of locales which are definitely available for me, to test functionality and performance.
  */
-export const locales: Locale[] = [
+const locales: Locale[] = [
 	{ country: 'US', language: 'en', locale: 'en-US', fullCountryName: 'USA' },
 	{ country: 'GB', language: 'en', locale: 'en-GB', fullCountryName: 'United Kingdom' },
 	{ country: 'CA', language: 'en', locale: 'en-CA', fullCountryName: 'Canada' },
@@ -14,19 +14,18 @@ export const locales: Locale[] = [
 	{ country: 'AU', language: 'en', locale: 'en-AU', fullCountryName: 'Australia' }
 ];
 
+export const multipleTestMarkets: string[] = locales.map((locale) => locale.country);
+
 /**
  * A single locale to test with as to not exceed the rate limit when writing new code.
  */
-export const testLocale: Locale[] = [
-	{ country: 'FR', language: 'fr', locale: 'fr-FR', fullCountryName: 'France' }
-];
+export const oneTestMarket: string[] = [...locales[0].country];
 
 /**
  * Locales with ISO 3166-1 alpha-2 country codes for all countries in which spotify is available.
  * See: https://support.spotify.com/us/article/where-spotify-is-available/
  */
-export const fullLocales: Locale[] = [
-	...locales,
+export const allLocales: Locale[] = [
 	// Africa
 	{ country: 'DZ', language: 'ar', locale: 'ar-DZ', fullCountryName: 'Algeria' },
 	{ country: 'AO', language: 'pt', locale: 'pt-AO', fullCountryName: 'Angola' },
