@@ -1,7 +1,12 @@
 <script lang="ts">
 	import Button from '$lib/common/components/button.svelte';
 	import Table from '$lib/common/components/table.svelte';
-	import { ButtonType, type SpotifyGenresForMarket } from '$lib/common/types/types';
+	import {
+		ButtonType,
+		type GenreCount,
+		type Locale,
+		type SpotifyGenresForMarket
+	} from '$lib/common/types/types';
 	import { onMount } from 'svelte';
 	import { PUBLIC_AUTO_FETCH_DATA } from '$env/static/public';
 
@@ -36,24 +41,25 @@
 	}
 
 	function downloadCSV() {
+		const tableHeader = 'Genre,Amount of songs in top 50,Locale\n';
 		const csvContent = genresForMarket
 			.map((genreForMarket) => {
-				const tableHeader = 'Genre,Amount of songs in top 50,Locale\n';
-
 				const tableRows = genreForMarket.genres
 					.map(
 						(genreAmount) =>
-							`${genreAmount.genre},${genreAmount.count},${genreForMarket.locale.fullCountryName}\n`
+							`${genreAmount.genre},${genreAmount.count},${genreForMarket.countryName}\n`
 					)
 					.join('');
 
-				return tableHeader + tableRows;
+				return tableRows;
 			})
 			.join('');
 
-		const fileName = 'allGenresForMarket.csv';
+		const fullCSVContent = tableHeader + csvContent;
 
-		const blob = new Blob([csvContent], { type: 'text/csv' });
+		const fileName = 'data.csv';
+
+		const blob = new Blob([fullCSVContent], { type: 'text/csv' });
 		const url = URL.createObjectURL(blob);
 
 		const link = document.createElement('a');
@@ -67,7 +73,57 @@
 		URL.revokeObjectURL(url);
 	}
 
-	function uploadData(event: Event) {}
+	function uploadData(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files && input.files[0];
+
+		if (file) {
+			const reader = new FileReader();
+
+			reader.onload = () => {
+				const csvContent = reader.result as string;
+				const parsedData = parseCSV(csvContent);
+
+				if (parsedData) {
+					genresForMarket = parsedData;
+				} else {
+					console.error('Invalid CSV format');
+				}
+			};
+
+			reader.readAsText(file);
+		}
+	}
+
+	function parseCSV(csvContent: string): SpotifyGenresForMarket[] | null {
+		try {
+			const rows = csvContent.split('\n').map((row) => row.split(','));
+			const groupedData: Record<string, SpotifyGenresForMarket> = {};
+			const dataRows = rows.slice(1); // skip first row because theyre the headers
+
+			dataRows.forEach((row) => {
+				if (row.length === 3) {
+					const locale = row[2].trim();
+					const genre: GenreCount = { genre: row[0].trim(), count: parseInt(row[1].trim(), 10) };
+
+					if (locale in groupedData) {
+						groupedData[locale].genres.push(genre);
+					} else {
+						groupedData[locale] = { countryName: locale, genres: [genre] };
+					}
+				} else {
+					console.error('Row does not have the expected number of elements:', row);
+				}
+			});
+
+			const parsedData = Object.values(groupedData);
+
+			return parsedData;
+		} catch (error) {
+			console.error('Error parsing CSV:', error);
+			return null;
+		}
+	}
 </script>
 
 <div class="block m-12 h-[50px]">
@@ -75,9 +131,13 @@
 		<Button on:click={fetchData} label="Fetch data" buttonType={ButtonType.OUTLINE} />
 
 		<input type="file" accept=".csv" class="hidden" id="fileInput" on:change={uploadData} />
-		<Button label="Upload data" buttonType={ButtonType.OUTLINE} />
+		<label
+			for="fileInput"
+			class="bg-transparent text-sky-700 hover:text-white hover:border-transparent text-center uppercase min-w-[180px] hover:bg-sky-700 cursor-pointer font-semibold py-2 px-4 border border-sky-700 hover:border-transparent rounded"
+			>Upload Data</label
+		>
 
-		{#if true || genresForMarket.length > 0}
+		{#if genresForMarket.length > 0}
 			<Button
 				on:click={downloadCSV}
 				label="Download all data as CSV"
@@ -105,7 +165,7 @@
 			{@const tableData = getTableData(genreForMarket)}
 
 			<h1 class="mt-8 mb-4 pb-4 border-b-2 border-black text-xl font-bold">
-				{genreForMarket.locale.fullCountryName}
+				{genreForMarket.countryName}
 			</h1>
 			<Table headers={['Genre', 'Amount of songs in top 50']} rows={tableData} />
 		{/each}

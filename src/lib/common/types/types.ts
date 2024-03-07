@@ -6,7 +6,7 @@ export interface Locale {
 }
 
 export interface SpotifyGenresForMarket {
-	locale: Locale;
+	countryName: string;
 	genres: GenreCount[];
 }
 

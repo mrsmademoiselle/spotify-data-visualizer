@@ -37,7 +37,7 @@ export const GET = async () => {
 
 				if (genres.length) {
 					const genreCounts: GenreCount[] = countGenreDuplicates(genres);
-					genresForMarket.push({ locale: spotifyMarket, genres: genreCounts });
+					genresForMarket.push({ countryName: spotifyMarket.fullCountryName, genres: genreCounts });
 				}
 			}
 		}
