@@ -4,12 +4,16 @@
 	import {
 		ButtonType,
 		type GenreCount,
-		type Locale,
 		type SpotifyGenresForMarket
 	} from '$lib/common/types/types';
 	import { onMount } from 'svelte';
-	import { PUBLIC_AUTO_FETCH_DATA } from '$env/static/public';
+	import { PUBLIC_AUTO_FETCH_DATA, PUBLIC_USE_EXAMPLE_DATA } from '$env/static/public';
 	import { tooltip } from '@svelte-plugins/tooltips';
+	import PieChart from '$lib/common/components/charts/chart.svelte';
+	import { top50genres_exampleData } from '$lib/common/example-data/top50genres';
+	import Chart from '$lib/common/components/charts/chart.svelte';
+	import BubbleChart from '$lib/common/components/charts/stacked-bar-chart.svelte';
+	import StackedBarChart from '$lib/common/components/charts/stacked-bar-chart.svelte';
 
 	let genresForMarket: SpotifyGenresForMarket[] = [];
 	let isLoading: boolean = false;
@@ -17,6 +21,9 @@
 	onMount(() => {
 		if (PUBLIC_AUTO_FETCH_DATA === 'true') {
 			fetchData();
+		}
+		if (PUBLIC_USE_EXAMPLE_DATA === 'true') {
+			genresForMarket = top50genres_exampleData;
 		}
 	});
 
@@ -74,25 +81,29 @@
 		URL.revokeObjectURL(url);
 	}
 
+	function readData(file: File) {
+		const reader = new FileReader();
+
+		reader.onload = () => {
+			const csvContent = reader.result as string;
+			const parsedData = parseCSV(csvContent);
+
+			if (parsedData) {
+				genresForMarket = parsedData;
+			} else {
+				console.error('Invalid CSV format');
+			}
+		};
+
+		reader.readAsText(file);
+	}
+
 	function uploadData(event: Event) {
 		const input = event.target as HTMLInputElement;
 		const file = input.files && input.files[0];
 
 		if (file) {
-			const reader = new FileReader();
-
-			reader.onload = () => {
-				const csvContent = reader.result as string;
-				const parsedData = parseCSV(csvContent);
-
-				if (parsedData) {
-					genresForMarket = parsedData;
-				} else {
-					console.error('Invalid CSV format');
-				}
-			};
-
-			reader.readAsText(file);
+			readData(file);
 		}
 	}
 
@@ -180,7 +191,10 @@
 			<h1 class="mt-8 mb-4 pb-4 border-b-2 border-black text-xl font-bold">
 				{genreForMarket.countryName}
 			</h1>
-			<Table headers={['Genre', 'Occurrences (top 50)']} rows={tableData} />
+			<div class="grid grid-cols-1 md:grid-cols-2">
+				<Table headers={['Genre', 'Occurrences (top 50)']} rows={tableData} />
+				<StackedBarChart {genreForMarket} />
+			</div>
 		{/each}
 	{/if}
 </div>
