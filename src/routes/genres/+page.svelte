@@ -9,6 +9,7 @@
 	} from '$lib/common/types/types';
 	import { onMount } from 'svelte';
 	import { PUBLIC_AUTO_FETCH_DATA } from '$env/static/public';
+	import { tooltip } from '@svelte-plugins/tooltips';
 
 	let genresForMarket: SpotifyGenresForMarket[] = [];
 	let isLoading: boolean = false;
@@ -41,7 +42,7 @@
 	}
 
 	function downloadCSV() {
-		const tableHeader = 'Genre,Amount of songs in top 50,Locale\n';
+		const tableHeader = 'Genre,Occurrences (top 50),Country\n';
 		const csvContent = genresForMarket
 			.map((genreForMarket) => {
 				const tableRows = genreForMarket.genres
@@ -132,9 +133,15 @@
 
 		<input type="file" accept=".csv" class="hidden" id="fileInput" on:change={uploadData} />
 		<label
+			use:tooltip={{
+				action: 'hover',
+				position: 'bottom',
+				content:
+					'The CSV file must contain the columns "Genre", "Occurrences" and "Country" in that order (naming does not matter).'
+			}}
 			for="fileInput"
-			class="bg-transparent text-sky-700 hover:text-white hover:border-transparent text-center uppercase min-w-[180px] hover:bg-sky-700 cursor-pointer font-semibold py-2 px-4 border border-sky-700 hover:border-transparent rounded"
-			>Upload Data</label
+			class="bg-transparent text-sky-700 hover:text-white hover:border-transparent text-center min-w-[180px] hover:bg-sky-700 cursor-pointer font-semibold py-2 px-4 border border-sky-700 hover:border-transparent rounded"
+			><span class="uppercase">Upload CSV</span></label
 		>
 
 		{#if genresForMarket.length > 0}
@@ -146,8 +153,14 @@
 		{/if}
 	</div>
 
+	<div class="mt-8 border-b-2 py-4">
+		<div class="font-bold text-xl pb-2">Description</div>
+		Displays the different music genres contained in the top 50 Spotify playlist and how often they occur
+		for each available Spotify market.
+	</div>
+
 	{#if isLoading}
-		<div class="bg-white rounded-lg mt-8 animate-pulse">
+		<div class="bg-white rounded-lg mt-4 animate-pulse">
 			<div class="w-2/3 h-8 bg-gray-300 rounded mb-8"></div>
 
 			<div class="w-1/3 h-8 bg-gray-300 rounded mb-2"></div>
@@ -159,7 +172,7 @@
 		</div>
 	{:else}
 		{#if genresForMarket.length === 0}
-			<div class="mt-8">No data. Please fetch or upload some.</div>
+			<div class="mt-8 text-gray-500 italic">No data yet. Please fetch or upload some.</div>
 		{/if}
 		{#each genresForMarket as genreForMarket}
 			{@const tableData = getTableData(genreForMarket)}
@@ -167,7 +180,7 @@
 			<h1 class="mt-8 mb-4 pb-4 border-b-2 border-black text-xl font-bold">
 				{genreForMarket.countryName}
 			</h1>
-			<Table headers={['Genre', 'Amount of songs in top 50']} rows={tableData} />
+			<Table headers={['Genre', 'Occurrences (top 50)']} rows={tableData} />
 		{/each}
 	{/if}
 </div>
